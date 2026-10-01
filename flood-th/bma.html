@@ -1,0 +1,29 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f2a33"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="น้ำวันนี้"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="icon" href="icons/icon-192.png"><title>ถนนน้ำท่วม กทม. | น้ำวันนี้</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap"><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"><style>#map{height:min(70vh,560px);border:1px solid var(--line);border-radius:14px}</style></head><body><header class="top"></header><main class="wrap">
+<h1>ถนนน้ำท่วมในกรุงเทพฯ</h1><p class="sub">เลือกรถที่คุณใช้ แผนที่จะบอกว่าถนนไหนผ่านได้ สีแดงคือผ่านไม่ได้ ควรเลี่ยง กดที่เส้นถนนเพื่อดูความลึกของน้ำ</p><p class="sub" id="meta">กำลังโหลด…</p>
+<div class="chips" role="group" aria-label="ประเภทรถ"><button data-v="motorbike" aria-pressed="false">มอเตอร์ไซค์</button><button data-v="sedan" aria-pressed="true">รถเก๋ง</button><button data-v="pickup" aria-pressed="false">กระบะ</button><button data-v="truck" aria-pressed="false">รถบรรทุก</button></div>
+<div id="map" role="application" aria-label="แผนที่ถนนน้ำท่วม"></div>
+<div class="legend"><p>สีของถนน</p><span class="lv l1"><i></i>เขียว: ผ่านได้</span><span class="lv l2"><i></i>เหลือง: ผ่านได้แต่ขับช้าๆ</span><span class="lv l3"><i></i>ส้ม: เสี่ยง ควรเลี่ยง</span><span class="lv l4"><i></i>แดง: ผ่านไม่ได้</span></div>
+<div class="grid" id="cnt"></div>
+<div class="note">คำตัดสินประเมินจากรายงานประชาชน Traffy Fondue เซนเซอร์ กทม. และข่าว ความเชื่อมั่นต่ำกว่า 50% ควรตรวจสอบก่อนเดินทาง ข้อมูลเป็นภาพ ณ เวลาที่ระบุ</div>
+</main><footer></footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script><script src="app.js"></script><script>
+window.NO_AUTO_RELOAD=true;nav('bma.html');
+const COL={ok:'#2e8b57',caution:'#c99a00',risky:'#d9731a',blocked:'#c0392b'},TXT={ok:'ผ่านได้',caution:'ผ่านได้แต่ขับช้าๆ',risky:'เสี่ยง ควรเลี่ยง',blocked:'ผ่านไม่ได้'},W={ok:2,caution:3,risky:4,blocked:5};
+const map=L.map('map').setView([13.78,100.6],11);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(map);
+let layer,gj,veh='sedan';
+function draw(){
+ if(layer)layer.remove();const c={ok:0,caution:0,risky:0,blocked:0};
+ layer=L.geoJSON(gj,{style:f=>{const v=f.properties.verdict?.[veh]||'ok';return{color:COL[v],weight:W[v],opacity:.9}},
+  onEachFeature:(f,l)=>{const p=f.properties,v=p.verdict?.[veh]||'ok';c[v]++;
+   l.bindPopup(`<b>${esc(p.name||'-')}</b><br>${TXT[v]}<br>ความลึก: ${p.depthCm==null?'ไม่ทราบ':p.depthCm+' ซม.'}<br>ความเชื่อมั่น: ${Math.round((p.conf||0)*100)}%<br>อัปเดต: ${p.updated?fmtT(p.updated):'-'}`)}}).addTo(map);
+ $('#cnt').innerHTML=['blocked','risky','caution','ok'].map(k=>`<div class="stat"><b class="l${{ok:1,caution:2,risky:3,blocked:4}[k]}">${c[k]}</b><span>ช่วงถนน · ${TXT[k]}</span></div>`).join('');
+}
+document.querySelectorAll('.chips button').forEach(b=>b.onclick=()=>{veh=b.dataset.v;document.querySelectorAll('.chips button').forEach(x=>x.setAttribute('aria-pressed',x===b));draw()});
+const LIVE='https://floodboard.org/api/export/roads.geojson';
+async function getRoads(){try{const r=await fx('/api/roads',LIVE);return{g:await r.json(),live:true}}catch(e){return{g:await local('data/roads.json'),live:false}}}
+async function refresh(){try{const{g,live}=await getRoads();gj=g;const t=Math.max(...g.features.map(f=>f.properties.updated||0));
+ $('#meta').innerHTML=(live?'<span class="badge live">ข้อมูลสด</span> ':'<span class="badge snap">ข้อมูลบันทึกไว้</span> ')+g.features.length.toLocaleString('th-TH')+' ช่วงถนน · ข้อมูลล่าสุด '+fmtT(t)+' · ข้อมูลจาก <a href="https://floodboard.org" target="_blank" rel="noopener">Floodboard</a> (CC BY 4.0)'+(live?'':' · ดึงสดไม่ได้ จึงใช้ไฟล์สำรอง');draw()}
+ catch(e){$('#meta').innerHTML='<span class="err">โหลดข้อมูลไม่ได้ ต้องเปิดผ่านเว็บเซิร์ฟเวอร์ ไม่ใช่ดับเบิลคลิกไฟล์</span>'}}
+refresh();setInterval(refresh,300000);
+</script></body></html>

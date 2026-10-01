@@ -1,0 +1,37 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f2a33"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="น้ำวันนี้"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="icon" href="icons/icon-192.png"><title>ช่วยเหลือ | น้ำวันนี้</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap"><link rel="stylesheet" href="style.css"></head>
+<body><header class="top"></header><main class="wrap">
+<h1>เบอร์ฉุกเฉินและวิธีเตรียมตัว</h1>
+<p class="sub">กดที่เบอร์เพื่อโทรได้ทันทีจากมือถือ ถ้ากดไม่ได้ ให้กดปุ่ม "คัดลอกเบอร์" แล้วไปวางในแอปโทรศัพท์</p>
+<div class="cards">
+<div class="card"><h3>น้ำท่วม ภัยพิบัติ (ปภ.)</h3><a class="tel" href="tel:1784">1784</a><p>โทรได้ 24 ชั่วโมง ขอความช่วยเหลือ ขอเรือ ขออพยพ</p><button type="button" data-copy="1784">คัดลอกเบอร์</button></div>
+<div class="card"><h3>เจ็บป่วยฉุกเฉิน</h3><a class="tel" href="tel:1669">1669</a><p>ส่งรถพยาบาล คนเจ็บ คนป่วยติดน้ำ</p><button type="button" data-copy="1669">คัดลอกเบอร์</button></div>
+<div class="card"><h3>ตำรวจ</h3><a class="tel" href="tel:191">191</a><p>เหตุด่วนเหตุร้าย</p><button type="button" data-copy="191">คัดลอกเบอร์</button></div>
+<div class="card"><h3>กรุงเทพมหานคร</h3><a class="tel" href="tel:1555">1555</a><p>แจ้งน้ำท่วมขัง ท่อตัน ในกรุงเทพฯ</p><button type="button" data-copy="1555">คัดลอกเบอร์</button></div>
+<div class="card"><h3>กรมอุตุนิยมวิทยา</h3><a class="tel" href="tel:1182">1182</a><p>สอบถามสภาพอากาศ พายุ ฝน</p><button type="button" data-copy="1182">คัดลอกเบอร์</button></div>
+</div>
+<h2>ก่อนน้ำมา ทำอะไรบ้าง</h2>
+<ul>
+<li>ยกของมีค่า เอกสารสำคัญ (บัตรประชาชน โฉนด สมุดบัญชี) ขึ้นที่สูง ใส่ถุงพลาสติกปิดให้แน่น</li>
+<li>เตรียมยาประจำตัวอย่างน้อย 7 วัน แว่นตา เครื่องช่วยฟัง</li>
+<li>เตรียมน้ำดื่ม อาหารแห้ง ไฟฉาย ถ่านสำรอง และแบตสำรองโทรศัพท์</li>
+<li>จดเบอร์ญาติและเบอร์ฉุกเฉินลงกระดาษ เผื่อโทรศัพท์แบตหมด</li>
+<li>ย้ายรถไปจอดที่สูง</li>
+</ul>
+<h2>เมื่อน้ำเริ่มเข้าบ้าน</h2>
+<ul>
+<li>ปิดสวิตช์ไฟชั้นล่าง อย่าแตะปลั๊กหรือสวิตช์ตอนตัวเปียก</li>
+<li>อย่าเดินหรือขับรถผ่านน้ำที่ไหลเชี่ยว น้ำสูงแค่เข่าก็พัดคนล้มได้</li>
+<li>ถ้าหน่วยงานประกาศให้อพยพ ให้ออกทันที ไม่ต้องรอเก็บของ</li>
+</ul>
+<h2>ติดตามประกาศทางการ</h2>
+<ul>
+<li><a href="https://www.disaster.go.th" target="_blank" rel="noopener">กรมป้องกันและบรรเทาสาธารณภัย (ปภ.)</a></li>
+<li><a href="https://www.tmd.go.th" target="_blank" rel="noopener">กรมอุตุนิยมวิทยา</a></li>
+<li><a href="https://www.thaiwater.net" target="_blank" rel="noopener">คลังข้อมูลน้ำแห่งชาติ (สสน.)</a></li>
+<li><a href="https://floodboard.org" target="_blank" rel="noopener">Floodboard แผนที่ถนนน้ำท่วม กทม.</a></li>
+</ul>
+</main><footer></footer><script src="app.js"></script><script>
+window.NO_AUTO_RELOAD=true;nav('help.html');
+document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(b.dataset.copy);b.textContent='คัดลอกแล้ว ✓'}catch(e){b.textContent='เบอร์ '+b.dataset.copy}setTimeout(()=>b.textContent='คัดลอกเบอร์',3000)});
+</script></body></html>

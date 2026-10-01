@@ -1,0 +1,13 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f2a33"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="น้ำวันนี้"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="icon" href="icons/icon-192.png"><title>น้ำทะเลหนุน | น้ำวันนี้</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap"><link rel="stylesheet" href="style.css"></head><body><header class="top"></header><main class="wrap">
+<h1>น้ำทะเลหนุน</h1><p class="sub">ช่วงที่น้ำทะเลขึ้นสูง น้ำในแม่น้ำจะไหลออกทะเลได้ช้า คนริมแม่น้ำเจ้าพระยาตอนล่างควรระวังช่วงเวลา "น้ำขึ้นสูงสุด"</p>
+<div class="status" id="st">กำลังโหลด…</div>
+<div class="tablebox"><table><thead><tr><th>สถานีชายฝั่ง</th><th>น้ำขึ้นสูงสุด (ม.)</th><th>เวลาน้ำขึ้นสูงสุด</th><th>น้ำลงต่ำสุด (ม.)</th><th>เวลาน้ำลงต่ำสุด</th></tr></thead><tbody id="tb"></tbody></table></div>
+<div class="note">ค่าพยากรณ์จากแบบจำลองของ สสน. ระดับอ้างอิงเป็นของแต่ละสถานี ใช้เปรียบเทียบตามเวลา ไม่ใช่ความสูงเหนือพื้นดิน</div></main><footer></footer><script src="app.js"></script><script>
+nav('tide.html');
+(async()=>{try{const r=await fx('/api/tide','https://fews2.hii.or.th/model-output/data_portal/tide_table/summary.txt');
+ const rows=csv(await r.text());
+ $('#st').innerHTML='<span class="badge live">ข้อมูลสด</span><span>สสน. (HII) · วันที่ '+esc(rows[0]?.date||'-')+' · '+rows.length+' สถานี</span>';
+ const g=o=>o['station.name.TH']||o['station.name.EN']||o.code;
+ $('#tb').innerHTML=rows.map(o=>`<tr><td>${esc(g(o))}</td><td>${num(o.max_value)}</td><td>${esc(o.max_time||'-')}</td><td>${num(o.min_value)}</td><td>${esc(o.min_time||'-')}</td></tr>`).join('');
+}catch(e){$('#st').innerHTML='<span class="badge snap">ไม่มีข้อมูล</span><span class="err">ดึงตารางน้ำขึ้นน้ำลงไม่ได้ ('+esc(e.message)+') ดูได้ที่ <a href="https://www.thaiwater.net" target="_blank" rel="noopener">thaiwater.net</a></span>'}})();
+</script></body></html>

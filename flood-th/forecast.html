@@ -1,0 +1,94 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f2a33"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="น้ำวันนี้"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="icon" href="icons/icon-192.png"><title>พยากรณ์ฝนและเรดาร์ | น้ำวันนี้</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap"><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"><style>.map{height:min(65vh,520px)}svg{width:100%;height:auto;display:block}</style></head><body><header class="top"></header><main class="wrap">
+<h1>พยากรณ์ฝนและเรดาร์</h1><p class="sub">เลือกที่ที่อยากดู แล้วดูว่าฝนจะตกหนักแค่ไหน ไล่ได้ 7 วันข้างหน้า</p>
+<div class="tools"><select id="city" aria-label="เลือกจังหวัดยอดนิยม"></select><input id="sq" type="search" placeholder="หาชื่อที่อื่น เช่น บางกรวย, ปากเกร็ด" aria-label="ค้นหาสถานที่"><button type="button" id="go">ค้นหา</button><button type="button" id="me">📍 ที่ที่ฉันอยู่</button></div>
+<div id="pick" class="sub"></div>
+<div class="status" id="st">กำลังโหลด…</div>
+<div id="sum" class="note" style="margin-bottom:12px"></div>
+<h2>ตอนนี้ที่ <span id="pl">-</span></h2><div class="grid" id="now"></div>
+<h2>ฝนที่คาดใน 24 / 72 ชั่วโมง</h2><div class="grid" id="kpi"></div>
+<h2>ฝนรายชั่วโมง (มม.)</h2><div class="ch"><svg id="ch" viewBox="0 0 680 220" role="img" aria-label="กราฟพยากรณ์ฝนรายชั่วโมง"></svg></div>
+<p class="sub">แท่งสีส้ม-แดง คือชั่วโมงที่ฝนหนัก (ตั้งแต่ 10 มม./ชม. ขึ้นไป)</p>
+<h2>พยากรณ์ 7 วัน</h2><div class="tablebox"><table><thead><tr><th>วัน</th><th>อากาศ</th><th>ฝนรวม (มม.)</th><th>โอกาสฝนตก</th><th>อุณหภูมิ (°C)</th></tr></thead><tbody id="dy"></tbody></table></div>
+<h2>เรดาร์ฝน</h2><p class="sub">ฟ้า-เขียว คือฝนเบา เหลือง-แดง คือฝนหนัก กดปุ่มเล่นเพื่อดูกลุ่มฝนเคลื่อนที่ย้อนหลัง แตะบนแผนที่เพื่อดูพยากรณ์ตรงจุดนั้น</p>
+<div class="tools"><button type="button" id="play">▶ เล่นภาพเคลื่อนไหว</button><input id="sl" type="range" min="0" max="0" value="0" style="flex:1 1 200px" aria-label="เลือกเวลาเรดาร์"><label><input type="checkbox" id="sat"> ดูภาพเมฆจากดาวเทียม</label></div>
+<div id="map" class="map"></div>
+<p class="sub" id="rv">กำลังโหลดเรดาร์…</p>
+<h2>แผนที่อากาศจาก Windy</h2><p class="sub">แผนที่จาก Windy.com ฝังไว้ให้ดูในหน้านี้ เลือกชั้นข้อมูลด้านล่าง แผนที่จะเลื่อนตามที่ที่คุณเลือกไว้ด้านบน</p>
+<div class="tools" id="wtabs" role="group" aria-label="เลือกชั้นข้อมูล Windy"></div>
+<iframe id="windy" title="แผนที่อากาศ Windy" loading="lazy" style="width:100%;height:min(70vh,520px);border:1px solid var(--line);border-radius:10px" allowfullscreen></iframe>
+<p class="sub">แผนที่และข้อมูลในกรอบนี้เป็นของ <a href="https://www.windy.com" target="_blank" rel="noopener">Windy.com</a> ไม่ได้อยู่ในระบบของเว็บนี้ ใช้ดูภาพรวมเท่านั้น</p>
+<div class="note">พยากรณ์จาก Open-Meteo (โมเดลคอมพิวเตอร์ ไม่ใช่ประกาศทางการ) เรดาร์และดาวเทียมจาก RainViewer ใช้ดูทิศทางกลุ่มฝนเท่านั้น ประกาศทางการดูที่ <a href="https://www.tmd.go.th" target="_blank" rel="noopener">กรมอุตุนิยมวิทยา</a></div></main><footer></footer><script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script><script src="app.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script><script src="app.js"></script><script>
+nav('forecast.html');
+const C=[['กรุงเทพฯ',13.75,100.5],['นนทบุรี',13.86,100.51],['ปทุมธานี',14.02,100.53],['สมุทรปราการ',13.6,100.6],['นครสวรรค์',15.7,100.12],['พระนครศรีอยุธยา',14.35,100.57],['อุทัยธานี',15.38,100.03],['ชัยนาท',15.19,100.13],['สิงห์บุรี',14.89,100.4],['อ่างทอง',14.59,100.45],['สุพรรณบุรี',14.47,100.12],['นครปฐม',13.82,100.04],['ลพบุรี',14.8,100.65],['สระบุรี',14.53,100.91],['ฉะเชิงเทรา',13.69,101.07],['เชียงใหม่',18.79,98.98],['เชียงราย',19.91,99.83],['พิษณุโลก',16.82,100.26],['สุโขทัย',17.0,99.82],['อุตรดิตถ์',17.62,100.1],['ขอนแก่น',16.44,102.83],['นครราชสีมา',14.98,102.1],['อุบลราชธานี',15.24,104.85],['สุราษฎร์ธานี',9.14,99.33],['นครศรีธรรมราช',8.43,99.96],['หาดใหญ่',7.0,100.47],['ภูเก็ต',7.88,98.39],['ยะลา',6.54,101.28]];
+const WX={0:['☀️','ฟ้าโปร่ง'],1:['🌤️','แดดเป็นส่วนใหญ่'],2:['⛅','มีเมฆบางส่วน'],3:['☁️','เมฆมาก'],45:['🌫️','หมอก'],48:['🌫️','หมอก'],51:['🌦️','ฝนปรอย'],53:['🌦️','ฝนปรอย'],55:['🌦️','ฝนปรอยหนัก'],61:['🌧️','ฝนเบา'],63:['🌧️','ฝนปานกลาง'],65:['🌧️','ฝนหนัก'],80:['🌦️','ฝนซู่'],81:['🌧️','ฝนซู่ปานกลาง'],82:['⛈️','ฝนซู่หนักมาก'],95:['⛈️','พายุฝนฟ้าคะนอง'],96:['⛈️','พายุฝนฟ้าคะนอง (มีลูกเห็บ)'],99:['⛈️','พายุฝนฟ้าคะนอง (มีลูกเห็บ)']};
+const wx=c=>WX[c]||(c>=95?WX[95]:c>=80?WX[81]:c>=61?WX[63]:c>=51?WX[51]:['🌡️','-']);
+let loc=null,marker=null,map=null;
+try{loc=JSON.parse(localStorage.getItem('loc')||'null')}catch(e){}
+if(!loc)loc={n:C[0][0],lat:C[0][1],lon:C[0][2]};
+$('#city').innerHTML='<option value="">— จังหวัดยอดนิยม —</option>'+C.map((c,i)=>`<option value="${i}">${c[0]}</option>`).join('');
+function setLoc(n,lat,lon,pan){loc={n,lat,lon};windy();try{localStorage.setItem('loc',JSON.stringify(loc))}catch(e){}
+ if(map){if(marker)marker.setLatLng([lat,lon]);else marker=L.marker([lat,lon]).addTo(map);if(pan)map.setView([lat,lon],Math.max(map.getZoom(),8))}fc()}
+async function fc(){$('#pl').textContent=loc.n;
+ try{const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&hourly=precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max&forecast_days=7&timezone=Asia%2FBangkok`);
+  if(!r.ok)throw new Error(r.status);const j=await r.json(),t=j.hourly.time.slice(0,72),p=j.hourly.precipitation.slice(0,72).map(v=>v||0),cu=j.current;
+  const tot=a=>a.reduce((x,y)=>x+y,0),mx=Math.max(...p,10),t24=tot(p.slice(0,24)),t72=tot(p);
+  $('#st').innerHTML='<span class="badge live">ข้อมูลสด</span><span>Open-Meteo · อัปเดต '+new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})+' น. · หน้านี้โหลดใหม่เองทุก 5 นาที</span>';
+  // สรุปภาษาคน
+  const pk=Math.max(...p.slice(0,24)),pi=p.indexOf(pk);
+  let msg,cls;
+  if(t24>=90||pk>=30){msg='⚠️ ฝนหนักมากใน 24 ชั่วโมงข้างหน้า ระวังน้ำท่วมฉับพลัน';}
+  else if(t24>=35||pk>=10){msg='ฝนหนักใน 24 ชั่วโมงข้างหน้า ควรติดตามข่าวและเลี่ยงการเดินทางช่วงฝนตก';}
+  else if(t24>=10){msg='มีฝนปานกลางใน 24 ชั่วโมงข้างหน้า พกร่มไว้';}
+  else if(t24>=1){msg='มีฝนเล็กน้อยใน 24 ชั่วโมงข้างหน้า';}
+  else msg='24 ชั่วโมงข้างหน้า ฝนแทบไม่ตก';
+  $('#sum').innerHTML='<b>'+msg+'</b>'+(pk>=1?'<br>ช่วงฝนแรงสุด: '+new Date(t[pi]).toLocaleString('th-TH',{weekday:'short',hour:'2-digit',minute:'2-digit'})+' น. ประมาณ '+num(pk,1)+' มม./ชม.':'');
+  const w=wx(cu.weather_code);
+  $('#now').innerHTML=[[w[0]+' '+w[1],'อากาศ'],[num(cu.temperature_2m,0)+'°C','อุณหภูมิ (รู้สึกเหมือน '+num(cu.apparent_temperature,0)+'°C)'],[num(cu.relative_humidity_2m,0)+'%','ความชื้น'],[num(cu.wind_speed_10m,0),'ลม (กม./ชม.)'],[num(cu.precipitation,1),'ฝนตอนนี้ (มม.)']].map(([v,l])=>`<div class="stat"><b style="font-size:1.2em">${v}</b><span>${l}</span></div>`).join('');
+  $('#kpi').innerHTML=[[num(t24,1),'ฝนรวม 24 ชม. ข้างหน้า (มม.)'],[num(t72,1),'ฝนรวม 72 ชม. (มม.)'],[num(Math.max(...p),1),'ฝนสูงสุดรายชั่วโมง (มม.)']].map(([v,l])=>`<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
+  const W_=680,H=220,m={l:34,r:8,t:10,b:26},bw=(W_-m.l-m.r)/p.length,y=v=>H-m.b-v*(H-m.t-m.b)/mx;
+  let g=[0,.5,1].map(f=>`<line x1="${m.l}" x2="${W_-m.r}" y1="${y(mx*f)}" y2="${y(mx*f)}" stroke="var(--line)"/><text x="${m.l-5}" y="${y(mx*f)+4}" text-anchor="end" font-size="11" fill="var(--mut)">${num(mx*f,0)}</text>`).join('');
+  g+=p.map((v,i)=>`<rect x="${m.l+i*bw}" y="${y(v)}" width="${Math.max(bw-1,1)}" height="${H-m.b-y(v)}" fill="${v>=30?'#e5484d':v>=10?'#f59e0b':'var(--accent)'}"/>`).join('');
+  [0,24,48].forEach(i=>g+=`<text x="${m.l+i*bw}" y="${H-8}" font-size="11" fill="var(--mut)">${new Date(t[i]).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}</text>`);
+  $('#ch').innerHTML=g;
+  const d=j.daily;
+  $('#dy').innerHTML=d.time.map((x,i)=>{const w=wx(d.weather_code[i]);return `<tr><td>${new Date(x).toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'short'})}</td><td>${w[0]} ${w[1]}</td><td><b>${num(d.precipitation_sum[i],1)}</b></td><td>${d.precipitation_probability_max[i]==null?'-':num(d.precipitation_probability_max[i],0)+'%'}</td><td>${num(d.temperature_2m_min[i],0)} – ${num(d.temperature_2m_max[i],0)}</td></tr>`}).join('');
+ }catch(e){$('#st').innerHTML='<span class="badge snap">ไม่มีข้อมูล</span><span class="err">ดึงพยากรณ์ไม่ได้ ('+esc(e.message)+')</span>'}}
+$('#city').onchange=()=>{const c=C[$('#city').value];if(c)setLoc(c[0],c[1],c[2],true)};
+async function search(){const q=$('#sq').value.trim();if(!q)return;
+ try{const j=await (await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(q)+'&count=8&language=th&countryCode=TH')).json();
+  const rs=j.results||[];if(!rs.length){$('#pick').textContent='ไม่พบชื่อนี้ ลองพิมพ์ชื่ออื่น';return}
+  if(rs.length===1){$('#pick').textContent='';setLoc(rs[0].name,rs[0].latitude,rs[0].longitude,true);return}
+  $('#pick').innerHTML='เลือกที่ที่ต้องการ: '+rs.map((r,i)=>`<button type="button" data-i="${i}">${esc(r.name)}${r.admin1?' · '+esc(r.admin1):''}</button>`).join(' ');
+  $('#pick').querySelectorAll('button').forEach(b=>b.onclick=()=>{const r=rs[b.dataset.i];$('#pick').textContent='';setLoc(r.name,r.latitude,r.longitude,true)});
+ }catch(e){$('#pick').textContent='ค้นหาไม่ได้ ลองใหม่อีกครั้ง'}}
+$('#go').onclick=search;$('#sq').onkeydown=e=>{if(e.key==='Enter')search()};
+$('#me').onclick=()=>{if(!navigator.geolocation){$('#pick').textContent='เครื่องนี้ไม่รองรับการหาตำแหน่ง';return}
+ navigator.geolocation.getCurrentPosition(p=>setLoc('ที่ที่ฉันอยู่',p.coords.latitude,p.coords.longitude,true),()=>{$('#pick').textContent='ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง ลองพิมพ์ชื่อแทน'})};
+
+// ===== Windy (ฝังกรอบจาก embed.windy.com) =====
+const WT=[['radar','🌧️ เรดาร์ฝน'],['rain','☔ ปริมาณฝน'],['thunder','⛈️ ฟ้าคะนอง'],['wind','💨 ลม'],['satellite','🛰️ ดาวเทียม'],['clouds','☁️ เมฆ'],['temp','🌡️ อุณหภูมิ']];
+let wov=(()=>{try{return localStorage.getItem('wov')||'radar'}catch(e){return 'radar'}})();
+function windy(){const f=$('#windy');if(!f)return;
+ const u=`https://embed.windy.com/embed2.html?lat=${loc.lat.toFixed(3)}&lon=${loc.lon.toFixed(3)}&detailLat=${loc.lat.toFixed(3)}&detailLon=${loc.lon.toFixed(3)}&zoom=8&level=surface&overlay=${wov}&product=ecmwf&menu=&message=true&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1`;
+ if(f.dataset.u!==u){f.dataset.u=u;f.src=u}
+ $('#wtabs').innerHTML=WT.map(([k,t])=>`<button type="button" data-k="${k}" aria-pressed="${k===wov}">${t}</button>`).join('');
+ $('#wtabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{wov=b.dataset.k;try{localStorage.setItem('wov',wov)}catch(e){}windy()})}
+fc();windy();
+(async()=>{if(!LEAF_OK()){$('#rv').textContent='โหลดแผนที่ไม่ได้';return}
+ map=L.map('map').setView([loc.lat,loc.lon],7);
+ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:12,attribution:'© OpenStreetMap'}).addTo(map);
+ marker=L.marker([loc.lat,loc.lon]).addTo(map);
+ map.on('click',e=>setLoc('จุดที่แตะบนแผนที่ ('+e.latlng.lat.toFixed(2)+', '+e.latlng.lng.toFixed(2)+')',e.latlng.lat,e.latlng.lng,false));
+ try{const j=await (await fetch('https://api.rainviewer.com/public/weather-maps.json')).json(),fr=j.radar.past;
+  let layer=null,idx=fr.length-1,timer=null,satL=null;
+  const show=i=>{idx=i;if(layer)map.removeLayer(layer);layer=L.tileLayer(`${j.host}${fr[i].path}/256/{z}/{x}/{y}/2/1_1.png`,{opacity:.7,maxNativeZoom:7,maxZoom:12,attribution:'RainViewer'}).addTo(map);
+   $('#sl').value=i;$('#rv').textContent='เรดาร์เวลา '+fmtT(fr[i].time*1000)+(i===fr.length-1?' (ล่าสุด)':'')+' · ฟ้า-เขียว=ฝนเบา, เหลือง-แดง=ฝนหนัก'};
+  $('#sl').max=fr.length-1;$('#sl').oninput=e=>{clearInterval(timer);timer=null;$('#play').textContent='▶ เล่นภาพเคลื่อนไหว';show(+e.target.value)};
+  $('#play').onclick=()=>{if(timer){clearInterval(timer);timer=null;$('#play').textContent='▶ เล่นภาพเคลื่อนไหว';return}
+   $('#play').textContent='⏸ หยุด';timer=setInterval(()=>show((idx+1)%fr.length),700)};
+  $('#sat').onchange=e=>{if(satL){map.removeLayer(satL);satL=null}
+   if(e.target.checked&&j.satellite&&j.satellite.infrared&&j.satellite.infrared.length){const s=j.satellite.infrared,l=s[s.length-1];satL=L.tileLayer(`${j.host}${l.path}/256/{z}/{x}/{y}/0/0_0.png`,{opacity:.6,maxNativeZoom:6,maxZoom:12}).addTo(map)}
+   else if(e.target.checked)$('#rv').textContent='ไม่มีภาพดาวเทียมตอนนี้'};
+  show(idx);
+ }catch(e){$('#rv').innerHTML='<span class="err">โหลดเรดาร์ไม่ได้</span>'}})();
+</script></body></html>
