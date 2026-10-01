@@ -1,0 +1,25 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f2a33"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="น้ำวันนี้"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="icon" href="icons/icon-192.png"><title>รายเขต กทม. | น้ำวันนี้</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap"><link rel="stylesheet" href="style.css"><style>svg{width:100%;height:auto;display:block}</style></head><body><header class="top"></header><main class="wrap">
+<h1>น้ำท่วมรายเขต กรุงเทพฯ</h1><p class="sub" id="meta">กำลังโหลด…</p>
+<div class="grid" id="kpi"></div>
+<h2>ดัชนีความรุนแรง (0-100)</h2><div class="ch"><svg id="ch" viewBox="0 0 640 220" role="img" aria-label="กราฟดัชนีความรุนแรงย้อนหลัง"></svg></div>
+<h2>เขตที่ได้รับผลกระทบมากที่สุด</h2>
+<div class="tablebox"><table><thead><tr><th>เขต</th><th>ถนนปิด (กม.)</th><th>ถนนท่วม (กม.)</th><th>รายงาน</th><th>ลึกสุด (ซม.)</th></tr></thead><tbody id="tb"></tbody></table></div>
+<h2>ถนนที่ท่วมหนักที่สุด</h2>
+<div class="tablebox"><table><thead><tr><th>ชื่อถนน</th><th>เขต</th><th>ท่วม (กม.)</th><th>ปิด (กม.)</th><th>ลึกสุด (ซม.)</th></tr></thead><tbody id="tr"></tbody></table></div>
+</main><footer></footer><script src="app.js"></script><script>
+nav('districts.html');
+local('data/summary.json').then(s=>{
+ const n=s.now;$('#meta').textContent=`ข้อมูล ณ ${fmtT(s.generatedAt)} · ระยะ: ${n.phase==='stagnation'?'น้ำนิ่ง':n.phase}`;
+ const k=[[n.index,'ดัชนีความรุนแรง'],[num(n.blockedKm,1),'ถนนปิด (กม.)'],[num(n.floodedKm,1),'ถนนท่วมรวม (กม.)'],[num(n.peopleWet,0),'ประชากรในพื้นที่เปียก'],[n.districtsHit,'เขตที่ได้รับผลกระทบ'],[n.reports,'รายงานทั้งหมด']];
+ $('#kpi').innerHTML=k.map(([v,l])=>`<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
+ const h=[...s.history,{t:n.t,index:n.index}].filter(x=>x.index!=null),W=640,H=220,m={l:36,r:12,t:12,b:26};
+ const x=i=>m.l+i*(W-m.l-m.r)/(h.length-1),y=v=>H-m.b-v*(H-m.t-m.b)/100;
+ let g='';[0,25,50,75,100].forEach(v=>g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${m.l-6}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--mut)">${v}</text>`);
+ const pts=h.map((d,i)=>`${x(i)},${y(d.index)}`).join(' '),last=h.length-1;
+ g+=`<polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2.5"/><circle cx="${x(last)}" cy="${y(h[last].index)}" r="4.5" fill="var(--accent)"/><text x="${W-m.r}" y="${y(h[last].index)-10}" text-anchor="end" font-size="12" fill="var(--fg)">${h[last].index}</text>`;
+ g+=`<text x="${m.l}" y="${H-6}" font-size="11" fill="var(--mut)">${fmtT(h[0].t)}</text><text x="${W-m.r}" y="${H-6}" text-anchor="end" font-size="11" fill="var(--mut)">${fmtT(h[last].t)}</text>`;
+ $('#ch').innerHTML=g;
+ $('#tb').innerHTML=[...s.districts].sort((a,b)=>b.blockedKm-a.blockedKm).slice(0,20).map(d=>`<tr><td>${esc(d.name)}</td><td>${num(d.blockedKm,1)}</td><td>${num(d.floodedKm,1)}</td><td>${d.reports}</td><td>${d.maxDepthCm??'-'}</td></tr>`).join('');
+ $('#tr').innerHTML=s.topRoads.slice(0,15).map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.district||'')}</td><td>${num(r.km,1)}</td><td>${num(r.blockedKm,1)}</td><td>${r.maxDepthCm??'-'}</td></tr>`).join('');
+}).catch(()=>$('#meta').innerHTML='<span class="err">โหลดข้อมูลไม่ได้ ต้องเปิดผ่านเว็บเซิร์ฟเวอร์</span>');
+</script></body></html>

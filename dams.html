@@ -1,0 +1,57 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f2a33"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="น้ำวันนี้"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="icon" href="icons/icon-192.png"><title>เขื่อน | น้ำวันนี้</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap"><link rel="stylesheet" href="style.css"><style>svg{width:100%;height:auto;display:block}</style></head>
+<body><header class="top"></header><main class="wrap">
+<h1>น้ำในเขื่อนใหญ่</h1><p class="sub">เขื่อนที่น้ำเกิน 80% (แถบสีส้ม) อาจต้องปล่อยน้ำเพิ่ม ทำให้แม่น้ำด้านล่างสูงขึ้น</p>
+<h2>ปริมาณน้ำรายภาค</h2><div class="status" id="st0">กำลังโหลด…</div>
+<div class="tablebox"><table><thead><tr><th>ภาค</th><th>น้ำในเขื่อน (ล้าน ลบ.ม.)</th><th>ความจุ</th><th>น้ำเต็มกี่ %</th><th></th></tr></thead><tbody id="rg"></tbody></table></div>
+<h2>4 เขื่อนหลักลุ่มเจ้าพระยา รวม 60 วัน</h2><div class="grid" id="b4"></div>
+<div class="ch" style="margin-top:12px"><svg id="b4c" viewBox="0 0 680 220" role="img" aria-label="กราฟน้ำกักเก็บและน้ำไหลเข้า 4 เขื่อนใหญ่"></svg></div>
+<h2>เขื่อนทดน้ำ ฝาย และประตูระบายน้ำ</h2><p class="sub">เช่น เขื่อนเจ้าพระยา พระรามหก ป่าสักชลสิทธิ์ เขื่อนพวกนี้ไม่ได้เก็บน้ำไว้ แต่ทดน้ำให้ไหลเข้าคลองชลประทาน จึงแสดงเป็นระดับน้ำหน้าเขื่อน ไม่ใช่เปอร์เซ็นต์ความจุ</p><div class="status" id="st2">กำลังโหลด…</div>
+<div class="tools"><input id="q2" type="search" placeholder="พิมพ์ค้นหา เช่น เจ้าพระยา, ชัยนาท, ปตร." aria-label="ค้นหาเขื่อนทดน้ำ"></div>
+<div class="tablebox"><table><thead><tr><th>สถานี</th><th>จังหวัด</th><th>ระดับน้ำ (ม.)</th><th>เทียบกับขอบตลิ่ง</th><th>สถานะ</th></tr></thead><tbody id="bg"></tbody></table></div>
+<h2>รายเขื่อน (ข้อมูลสด)</h2>
+<div class="status" id="st">กำลังโหลด…</div>
+<div class="tablebox"><table><thead><tr><th>เขื่อน</th><th>กักเก็บ (ล้าน ลบ.ม.)</th><th>น้ำเต็มกี่ %</th><th></th><th>น้ำไหลเข้า (ลบ.ม./วินาที)</th><th>ปล่อยน้ำออก (ลบ.ม./วินาที)</th></tr></thead><tbody id="tb"></tbody></table></div>
+</main><footer></footer><script src="app.js"></script><script>
+nav('dams.html');
+let liveRegion=false;
+local('data/summary.json').then(j=>{const D=j.hydro.dams,R=D.regions,B=D.big4,l=B[B.length-1];if(!liveRegion){
+ $('#st0').innerHTML='<span class="badge snap">ข้อมูลบันทึกไว้</span><span>ณ '+esc(R[0].date)+' · จาก ThaiWater ผ่านไฟล์ data/summary.json</span>';
+ $('#rg').innerHTML=R.map(r=>`<tr><td>${esc(r.region)}</td><td>${num(r.storage,0)}</td><td>${num(r.normal,0)}</td><td>${num(r.pct,0)}%</td><td><div class="bar${r.pct>=80?' hi':''}"><span style="width:${Math.min(100,r.pct)}%"></span></div></td></tr>`).join('')}
+ $('#b4').innerHTML=[[num(l.storage,0),'กักเก็บ (ล้าน ลบ.ม.)'],[num(l.inflow,0),'น้ำเข้า (ลบ.ม./วิ)'],[num(l.released,0),'ระบายออก (ลบ.ม./วิ)']].map(([v,t])=>`<div class="stat"><b>${v}</b><span>${t}</span></div>`).join('');
+ const W=680,H=220,m={l:44,r:8,t:10,b:26},mx=Math.max(...B.map(x=>x.storage)),mn=Math.min(...B.map(x=>x.storage)),x=i=>m.l+i*(W-m.l-m.r)/(B.length-1),y=v=>H-m.b-(v-mn)*(H-m.t-m.b)/(mx-mn||1);
+ let g=[0,.5,1].map(f=>{const v=mn+(mx-mn)*f;return `<line x1="${m.l}" x2="${W-m.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${m.l-5}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--mut)">${num(v,0)}</text>`}).join('');
+ g+=`<polyline fill="none" stroke="var(--accent)" stroke-width="2.5" points="${B.map((d,i)=>x(i)+','+y(d.storage)).join(' ')}"/><text x="${m.l}" y="${H-8}" font-size="11" fill="var(--mut)">${esc(B[0].date)}</text><text x="${W-m.r}" y="${H-8}" text-anchor="end" font-size="11" fill="var(--mut)">${esc(l.date)} · กักเก็บรวม</text>`;
+ $('#b4c').innerHTML=g}).catch(()=>$('#st0').innerHTML='<span class="err">โหลดไฟล์ข้อมูลไม่ได้ ต้องเปิดผ่านเว็บเซิร์ฟเวอร์</span>');
+// เก็บออบเจ็กต์เขื่อนจากโครงสร้างใดก็ได้ (รวมฟิลด์ที่ซ้อนอยู่ข้างใน)
+function collect(o,out){
+ if(Array.isArray(o)){o.forEach(x=>collect(x,out));return}
+ if(o&&typeof o==='object'){
+  const f={...o};for(const k in o){const v=o[k];if(v&&typeof v==='object'&&!Array.isArray(v)&&!('dam_name' in f))Object.assign(f,v)}
+  if('dam_name' in f||'dam_storage' in f){out.push(f);return}
+  for(const k in o)collect(o[k],out)}}
+(async()=>{const res=await load('analyst/dam?dam_size=1',{});
+ status($('#st'),res);
+ if(!res.live){$('#tb').innerHTML='<tr><td colspan="6">ดึงรายเขื่อนสดไม่ได้ (ดูภาพรวมรายภาคด้านบนแทน)</td></tr>';return}
+ const raw=[];collect(res.data,raw);const seen=new Set();
+ const rows=raw.map(r=>{const d=r.dam||{},cap=parseFloat(d.normal_storage),st=parseFloat(String(r.dam_storage).replace(/,/g,''));
+  let p=parseFloat(r.dam_storage_percent);if(!(p>0)&&cap>0&&isFinite(st))p=st/cap*100;
+  return{n:tx(d.dam_name)||tx(r.dam_name)||tx(r.name),s:st,cap,p,i:r.dam_inflow,o:r.dam_released,reg:tx(r.geocode?.area_name)}})
+  .filter(r=>r.n&&!seen.has(r.n)&&seen.add(r.n)).sort((a,b)=>(b.p||0)-(a.p||0));
+ // รวมรายภาคจากเขื่อนที่ดึงสด (เฉพาะเขื่อนใหญ่)
+ const g={};rows.forEach(r=>{if(r.reg&&r.cap>0&&isFinite(r.s)){(g[r.reg]??={s:0,c:0,n:0});g[r.reg].s+=r.s;g[r.reg].c+=r.cap;g[r.reg].n++}});
+ const gk=Object.keys(g);
+ if(gk.length>=2){liveRegion=true;$('#st0').innerHTML='<span class="badge live">ข้อมูลสด</span><span>รวมจากเขื่อนใหญ่ '+rows.length+' แห่งที่ดึงได้ (ไม่รวมเขื่อนกลางและเล็ก) จึงอาจต่างจากตัวเลขทางการ</span>';
+  $('#rg').innerHTML=gk.map(k=>{const v=g[k],p=v.s/v.c*100;return `<tr><td>${esc(k)} (${v.n} เขื่อน)</td><td>${num(v.s,0)}</td><td>${num(v.c,0)}</td><td>${num(p,0)}%</td><td><div class="bar${p>=80?' hi':''}"><span style="width:${Math.min(100,p)}%"></span></div></td></tr>`}).join('')}
+ $('#tb').innerHTML=rows.map(r=>`<tr><td>${esc(r.n)}</td><td>${num(r.s,0)}</td><td>${r.p>0?num(r.p,0)+'%':'-'}</td><td><div class="bar${r.p>=80?' hi':''}"><span style="width:${Math.min(100,r.p||0)}%"></span></div></td><td>${num(r.i,0)}</td><td>${num(r.o,0)}</td></tr>`).join('')
+  ||'<tr><td colspan="6">ไม่พบข้อมูล · โครงสร้างที่ได้รับ: '+esc(JSON.stringify(res.data).slice(0,300))+'</td></tr>'})();
+
+// เขื่อนทดน้ำ/ฝาย/ประตูระบายน้ำ: ดึงจากสถานีวัดระดับน้ำ (ไม่มีข้อมูล % ความจุ)
+(async()=>{const res=await load('public/waterlevel_load',{});status($('#st2'),res);
+ const re=/ฝาย|ประตูระบาย|ปตร|ทดน้ำ|เขื่อนเจ้าพระยา|พระรามหก|ป่าสักชลสิทธิ์|นเรศวร|แม่กลอง/;
+ const d=findRows(res.data.waterlevel_data||res.data)||[];
+ const all=d.filter(wlOk).filter(r=>re.test(tx(r.station?.tele_station_name))).sort((a,b)=>levelOf(b)-levelOf(a));
+ const draw2=()=>{const q=$('#q2').value.trim(),v=all.filter(r=>!q||(tx(r.station?.tele_station_name)+tx(r.geocode?.province_name)).includes(q));
+ $('#bg').innerHTML=v.map(r=>{const df=parseFloat(r.diff_wl_bank),l=levelOf(r),bad=Math.abs(df-parseFloat(r.waterlevel_msl))<0.01;return `<tr><td>${esc(tx(r.station?.tele_station_name))}</td><td>${esc(tx(r.geocode?.province_name))}</td><td>${num(r.waterlevel_msl)}</td><td>${!isFinite(df)||bad?'ไม่มีข้อมูลตลิ่ง':(l===5?'สูงกว่าตลิ่ง ':'ต่ำกว่าตลิ่ง ')+num(Math.abs(df))+' ม.'}</td><td>${lvHtml(l)}</td></tr>`}).join('')||'<tr><td colspan="5">'+(res.live?(q?'ไม่พบที่ตรงกับคำค้น':'ไม่พบสถานีที่ชื่อเกี่ยวกับเขื่อนทดน้ำ/ฝาย'):'ดึงข้อมูลสดไม่ได้')+'</td></tr>'};
+ draw2();$('#q2').oninput=draw2})();
+</script></body></html>

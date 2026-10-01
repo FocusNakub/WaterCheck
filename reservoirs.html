@@ -1,0 +1,42 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f2a33"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="น้ำวันนี้"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="icon" href="icons/icon-192.png"><title>อ่างเก็บน้ำ | น้ำวันนี้</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap"><link rel="stylesheet" href="style.css"><style>.tools select{flex:0 1 auto}</style></head><body><header class="top"></header><main class="wrap">
+<h1>อ่างเก็บน้ำ</h1><p class="sub">อ่างขนาดกลางและเล็กทั่วประเทศ เรียงจากอ่างที่น้ำเต็มที่สุด อ่างที่น้ำเกิน 100% คือน้ำล้นอ่าง</p>
+<div class="tools" id="tabs"></div>
+<div class="status" id="st">กำลังโหลด…</div>
+<div class="grid" id="sum" style="margin-bottom:12px"></div>
+<div class="tools"><input id="q" type="search" placeholder="พิมพ์ชื่อจังหวัดหรือชื่ออ่าง"><select id="rg" aria-label="ภาค"><option value="">ทุกภาค</option></select><select id="lv" aria-label="สถานะ"><option value="0">ทุกสถานะ</option><option value="5">น้ำล้น (100%+)</option><option value="4">น้ำมาก (80-100%)</option><option value="3">ปานกลาง (50-80%)</option><option value="2">น้ำน้อย (30-50%)</option><option value="1">น้อยวิกฤต (&lt;30%)</option></select></div>
+<label class="chk"><input type="checkbox" id="old"> แสดงอ่างที่ข้อมูลเก่ากว่า 3 วันด้วย</label>
+<div class="tablebox"><table><thead><tr><th>อ่างเก็บน้ำ</th><th>จังหวัด</th><th>น้ำในอ่าง (ล้าน ลบ.ม.)</th><th>ความจุ</th><th>น้ำเต็มกี่ %</th><th></th><th>สถานะ</th><th>ข้อมูลเมื่อ</th></tr></thead><tbody id="tb"></tbody></table></div>
+<div class="note">เกณฑ์สถานะ: ต่ำกว่า 30% น้อยวิกฤต, 30-50% น้อย, 50-80% ปานกลาง, 80-100% มาก, เกิน 100% ล้น (ตามเกณฑ์ที่ใช้ทั่วไป ไม่ใช่ประกาศทางการของอ่างแต่ละแห่ง) อ่างที่ไม่มีข้อมูลกักเก็บจะไม่แสดงสถานะ</div>
+</main><footer></footer><script src="app.js"></script><script>
+nav('reservoirs.html');
+const TABS=[['2','ขนาดกลาง'],['3','ขนาดเล็ก (โทรมาตร)']],LV5={5:['น้ำล้น','l5'],4:['น้ำมาก','l4'],3:['ปานกลาง','l1'],2:['น้ำน้อย','l3'],1:['น้อยวิกฤต','l4']};
+let cur='2',rows=[];
+const MAXAGE=3*864e5;
+const ts=d=>{if(!d)return NaN;const x=String(d).trim().replace(' ','T');return new Date(x.length<=10?x+'T00:00:00+07:00':x+'+07:00').getTime()};
+const level=p=>p>=100?5:p>=80?4:p>=50?3:p>=30?2:1;
+function draw(){
+ const q=$('#q').value.trim(),rg=$('#rg').value,lv=+$('#lv').value;
+ const v=rows.filter(r=>($('#old').checked||r.fresh)&&(!q||(r.n+r.prov).includes(q))&&(!rg||r.reg===rg)&&(!lv||r.lv===lv));
+ $('#tb').innerHTML=v.slice(0,300).map(r=>`<tr><td>${esc(r.n)}</td><td>${esc(r.prov)}</td><td>${r.s==null?'-':num(r.s)}</td><td>${r.cap>0?num(r.cap):'-'}</td><td>${r.p==null?'-':num(r.p,0)+'%'}</td><td><div class="bar${r.p>=80?' hi':''}"><span style="width:${Math.min(100,r.p||0)}%"></span></div></td><td>${r.lv?`<span class="lv ${LV5[r.lv][1]}"><i></i>${LV5[r.lv][0]}</span>`:'-'}</td><td>${thDate(r.d)}</td></tr>`).join('')||'<tr><td colspan="8">ไม่พบข้อมูล</td></tr>';
+}
+async function go(){
+ $('#st').textContent='กำลังโหลด…';
+ const res=await load('analyst/dam?dam_size='+cur,{});
+ if(!res.live){$('#st').innerHTML='<span class="badge snap">ไม่มีข้อมูล</span><span class="err">ดึงข้อมูลอ่างเก็บน้ำไม่ได้ ('+esc(res.error||'')+')</span>';rows=[];$('#sum').innerHTML='';draw();return}
+ const list=findRows(res.data)||[];
+ rows=list.map(r=>{const d=r.dam||{},cap=parseFloat(d.normal_storage),s=parseFloat(r.dam_storage??r.volume);
+  let p=parseFloat(r.dam_storage_percent??r.percent_storage);
+  if(!(p>0)&&cap>0&&isFinite(s))p=s/cap*100;
+  const ok=isFinite(s)&&isFinite(p)&&(p>0||s>0);
+  return{n:tx(d.dam_name)||tx(d.smalldam_name),prov:tx(r.geocode?.province_name),reg:tx(r.geocode?.area_name),s:isFinite(s)?s:null,cap,p:ok?p:null,lv:ok?level(p):0,d:r.dam_date||r.smalldam_datetime,fresh:Date.now()-ts(r.dam_date||r.smalldam_datetime)<=MAXAGE}})
+  .filter(r=>r.n).sort((a,b)=>(b.p??-1)-(a.p??-1));
+ const old=rows.filter(r=>!r.fresh).length;status($('#st'),res,'<span>แสดง '+(rows.length-old)+' อ่าง'+(old?' · ซ่อนข้อมูลเก่า '+old+' อ่าง':'')+'</span>');
+ const regs=[...new Set(rows.map(r=>r.reg).filter(Boolean))];
+ $('#rg').innerHTML='<option value="">ทุกภาค</option>'+regs.map(x=>`<option>${esc(x)}</option>`).join('');
+ $('#sum').innerHTML=[5,4,3,2,1].map(k=>`<div class="stat"><b class="${LV5[k][1]}">${rows.filter(r=>r.fresh&&r.lv===k).length}</b><span>${LV5[k][0]}</span></div>`).join('');
+ draw();
+}
+$('#tabs').innerHTML=TABS.map(t=>`<button data-k="${t[0]}" aria-pressed="${t[0]===cur}">${t[1]}</button>`).join('');
+$('#tabs').onclick=e=>{const k=e.target.dataset?.k;if(!k)return;cur=k;document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===k));go()};
+['q','rg','lv','old'].forEach(i=>$('#'+i).oninput=$('#'+i).onchange=draw);go();
+</script></body></html>

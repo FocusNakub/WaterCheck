@@ -1,0 +1,16 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f2a33"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="น้ำวันนี้"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="icon" href="icons/icon-192.png"><title>เตือนภัยน้ำป่าและดินถล่ม | น้ำวันนี้</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap"><link rel="stylesheet" href="style.css"></head><body><header class="top"></header><main class="wrap">
+<h1>เตือนภัยน้ำป่าและดินโคลนถล่ม</h1><p class="sub">ถ้าพื้นที่ของคุณอยู่ในรายการนี้ และอยู่ใกล้ภูเขาหรือลำห้วย ให้เตรียมของและพร้อมย้ายขึ้นที่สูง</p>
+<h2>ตำบลที่เสี่ยงน้ำป่าไหลหลากตอนนี้</h2>
+<div class="status" id="st1">กำลังโหลด…</div>
+<div class="tools"><input id="q" type="search" placeholder="พิมพ์ชื่อจังหวัด อำเภอ หรือตำบล"></div>
+<div class="tablebox"><table><thead><tr><th>ตำบล</th><th>อำเภอ</th><th>จังหวัด</th><th>ค่าความเสี่ยง (FFPI)</th><th>ฝนที่คาดว่าจะตกพรุ่งนี้ (มม.)</th></tr></thead><tbody id="t1"></tbody></table></div>
+<h2>สถานีเตือนภัยล่วงหน้า (EWS)</h2>
+<div class="note">ข้อมูลสถานีเตือนภัยล่วงหน้า (EWS) ของกรมทรัพยากรน้ำ ดูสดๆ ได้ที่เว็บของกรมโดยตรง<br><a class="btn" href="https://ews.dwr.go.th" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;padding:12px 18px;border:2px solid var(--accent);border-radius:10px;font-weight:700;text-decoration:none">เปิดเว็บเตือนภัยล่วงหน้า (ews.dwr.go.th) ↗</a></div>
+<div class="note">FFPI เป็นดัชนีน้ำป่าของ สสน. เรียงจากค่าสูงไปต่ำ ควรอ่านประกาศทางการของ ปภ. ประกอบเสมอ</div></main><footer></footer><script src="app.js"></script><script>
+nav('warning.html');let ff=[];
+function d1(){const q=$('#q').value.trim();$('#t1').innerHTML=ff.filter(o=>!q||(o.province+o.district+o.subdistrict).includes(q)).slice(0,60).map(o=>`<tr><td>${esc(o.subdistrict||'')}</td><td>${esc(o.district||'')}</td><td>${esc(o.province||'')}</td><td>${num(o.FFPI)}</td><td>${num(o.rain,1)}</td></tr>`).join('')||'<tr><td colspan="5">ขณะนี้ไม่มีตำบลในรายการเสี่ยงน้ำป่า</td></tr>'}
+(async()=>{try{const r=await fx('/api/ff','https://fews2.hii.or.th/model-output/data_portal/flashflood/flashflood_report.txt');
+ ff=csv(await r.text()).map(o=>({province:o['จังหวัด']||'',district:o['อำเภอ']||'',subdistrict:o['ตำบล']||'',FFPI:o['FFPI'],rain:o['ฝนสะสม 1 วันล่วงหน้า']})).filter(o=>isFinite(parseFloat(o.FFPI))).sort((a,b)=>b.FFPI-a.FFPI);
+ $('#st1').innerHTML='<span class="badge live">ข้อมูลสด</span><span>สสน. (HII) · '+ff.length.toLocaleString('th-TH')+' ตำบล แสดง 60 อันดับแรก</span>';d1();$('#q').oninput=d1;
+}catch(e){$('#st1').innerHTML='<span class="badge snap">ไม่มีข้อมูล</span><span class="err">ดึงไม่ได้ ('+esc(e.message)+')</span>'}})();
+</script></body></html>
